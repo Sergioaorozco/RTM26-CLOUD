@@ -3,23 +3,70 @@ import Layout from '../layouts/Layout.astro';
 ---
 
 <Layout>
-	<section class="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(251,191,36,0.18),_transparent_45%),linear-gradient(135deg,_#020617,_#111827)] px-4 py-6">
-		<div class="w-full max-w-xl rounded-[1.5rem] border border-white/10 bg-slate-900/80 p-4 shadow-[0_10px_40px_rgba(0,0,0,0.35)] backdrop-blur-xl sm:p-6">
+	<section class="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top,rgba(251,191,36,0.18),transparent_45%),linear-gradient(135deg,#020617,#111827)] px-4 py-6">
+		<div class="w-full max-w-xl rounded-3xl border border-white/10 bg-slate-900/80 p-4 shadow-[0_10px_40px_rgba(0,0,0,0.35)] backdrop-blur-xl sm:p-6">
 			<div class="mb-4 text-center">
 				<h1 class="text-2xl font-black tracking-tight text-amber-400 sm:text-3xl">RTM 26 / TALLER 1</h1>
 				<p class="mt-2 text-sm text-amber-100/90 sm:text-base">Ese hombre eres tú: ¿recibir identidad o construirla?</p>
 			</div>
 
-			<div class="flex items-center gap-2 rounded-full border border-white/10 bg-slate-950/80 p-2 shadow-inner shadow-black/30">
-				<input
-					type="text"
-					placeholder="¿Qué piensas?"
-					class="h-12 w-full rounded-full bg-transparent px-4 text-sm text-white outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-amber-400/50 sm:text-base"
-				/>
-				<button class="h-11 shrink-0 rounded-full bg-amber-400 px-4 text-sm font-semibold text-slate-950 transition hover:bg-amber-300 sm:px-5">
-					Enviar
-				</button>
-			</div>
+			<form class="flex flex-col gap-2">
+				<div class="flex items-center gap-2 rounded-full border border-white/10 bg-slate-950/80 p-2 shadow-inner shadow-black/30">
+					<input
+						name="text"
+						type="text"
+						placeholder="¿Qué piensas?"
+						class="h-12 w-full rounded-full bg-transparent px-4 text-sm text-white outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-amber-400/50 sm:text-base"
+					/>
+					<button
+						type="submit"
+						class="h-11 shrink-0 rounded-full bg-amber-400 px-4 text-sm font-semibold text-slate-950 transition hover:bg-amber-300 sm:px-5"
+					>
+						Enviar
+					</button>
+				</div>
+				<p class="px-2 text-sm text-amber-200/90" data-feedback></p>
+			</form>
 		</div>
 	</section>
 </Layout>
+
+<script>
+	import { actions } from 'astro:actions';
+
+	const form = document.querySelector('form');
+	const feedback = document.querySelector('[data-feedback]');
+	const input = form?.querySelector('input[name="text"]') as HTMLInputElement | null;
+
+	if (form && feedback && input) {
+		form.addEventListener('submit', async (event) => {
+			event.preventDefault();
+			const text = input.value.trim();
+
+			if (!text) {
+				feedback.textContent = 'Escribe algo antes de enviar.';
+				feedback.className = 'px-2 text-sm text-rose-300';
+				return;
+			}
+
+			feedback.textContent = 'Guardando...';
+			feedback.className = 'px-2 text-sm text-amber-200/90';
+
+			try {
+				const result = await actions.saveWord({ text });
+				if (result?.data?.success) {
+					feedback.textContent = '¡Guardado correctamente!';
+					feedback.className = 'px-2 text-sm text-emerald-300';
+					input.value = '';
+				} else {
+					feedback.textContent = 'No se pudo guardar.';
+					feedback.className = 'px-2 text-sm text-rose-300';
+				}
+			} catch (error) {
+				console.error(error);
+				feedback.textContent = 'No se pudo guardar.';
+				feedback.className = 'px-2 text-sm text-rose-300';
+			}
+		});
+	}
+</script>

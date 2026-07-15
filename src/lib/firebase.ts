@@ -1,5 +1,15 @@
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
-import { addDoc, collection, getFirestore, serverTimestamp } from 'firebase/firestore';
+import {
+  addDoc,
+  collection,
+  doc,
+  getDoc,
+  getFirestore,
+  increment,
+  serverTimestamp,
+  setDoc,
+  updateDoc,
+} from 'firebase/firestore';
 
 const firebaseConfig = {
   apiKey: import.meta.env.PUBLIC_FIREBASE_API_KEY ?? '',
@@ -38,6 +48,10 @@ export function getFirebaseDb() {
   return getFirestore(firebaseApp);
 }
 
+function normalizeWord(text: string) {
+  return text.trim().toLowerCase();
+}
+
 export async function saveWord(text: string) {
   const trimmed = text.trim();
 
@@ -46,11 +60,32 @@ export async function saveWord(text: string) {
   }
 
   const db = getFirebaseDb();
-  const docRef = await addDoc(collection(db, 'submissions'), {
+  const normalized = normalizeWord(trimmed);
+  const wordRef = doc(db, 'words', normalized);
+  const wordSnapshot = await getDoc(wordRef);
+
+  if (wordSnapshot.exists()) {
+    await updateDoc(wordRef, {
+      count: increment(1),
+      lastSubmittedAt: serverTimestamp(),
+      latestValue: trimmed,
+    });
+  } else {
+    await setDoc(wordRef, {
+      text: trimmed,
+      normalizedText: normalized,
+      count: 1,
+      createdAt: serverTimestamp(),
+      lastSubmittedAt: serverTimestamp(),
+    });
+  }
+
+  const submissionRef = await addDoc(collection(db, 'submissions'), {
     text: trimmed,
+    normalizedText: normalized,
     createdAt: serverTimestamp(),
     source: 'rtm-cloud',
   });
 
-  return docRef.id;
+  return { id: submissionRef.id, wordId: normalized };
 }

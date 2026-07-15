@@ -23,10 +23,6 @@ const firebaseConfig = {
 let app: FirebaseApp | undefined;
 
 export function getFirebaseApp() {
-  if (typeof window === 'undefined') {
-    return undefined;
-  }
-
   if (!firebaseConfig.projectId) {
     return undefined;
   }

@@ -8,8 +8,8 @@ export const server = {
       text: z.string().trim().min(1),
     }),
     async handler({ text }) {
-      const id = await saveWord(text);
-      return { success: true, id };
+      const result = await saveWord(text);
+      return { success: true, id: result.id, wordId: result.wordId };
     },
   }),
 };

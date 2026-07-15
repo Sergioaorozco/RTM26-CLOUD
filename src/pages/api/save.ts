@@ -11,6 +11,8 @@ export const POST: APIRoute = async ({ request }) => {
       text = formData.get('text')?.toString() || '';
     } else {
       const rawBody = await request.text();
+      console.log('save route content type:', contentType);
+      console.log('save route raw body:', rawBody);
 
       if (contentType.includes('application/json') && rawBody) {
         try {

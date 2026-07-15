@@ -32,8 +32,6 @@ import Layout from '../layouts/Layout.astro';
 </Layout>
 
 <script>
-	import { actions } from 'astro:actions';
-
 	const form = document.querySelector('form');
 	const feedback = document.querySelector('[data-feedback]');
 	const input = form?.querySelector('input[name="text"]') as HTMLInputElement | null;
@@ -53,13 +51,21 @@ import Layout from '../layouts/Layout.astro';
 			feedback.className = 'px-2 text-sm text-amber-200/90';
 
 			try {
-				const result = await actions.saveWord({ text });
-				if (result?.data?.success) {
+				const formData = new FormData();
+				formData.append('text', text);
+
+				const response = await fetch('/api/save', {
+					method: 'POST',
+					body: formData,
+				});
+
+				const result = await response.json();
+				if (result?.success) {
 					feedback.textContent = '¡Guardado correctamente!';
 					feedback.className = 'px-2 text-sm text-emerald-300';
 					input.value = '';
 				} else {
-					feedback.textContent = 'No se pudo guardar.';
+					feedback.textContent = result?.message || 'No se pudo guardar.';
 					feedback.className = 'px-2 text-sm text-rose-300';
 				}
 			} catch (error) {

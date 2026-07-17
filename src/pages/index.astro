@@ -31,10 +31,12 @@ import Layout from '../layouts/Layout.astro';
 	</section>
 </Layout>
 
-<script>
+<script type="module">
+	import { saveWords } from '../lib/apiClient.ts';
+
 	const form = document.querySelector('form');
 	const feedback = document.querySelector('[data-feedback]');
-	const input = form?.querySelector('input[name="text"]') as HTMLInputElement | null;
+	const input = form?.querySelector('input[name="text"]');
 
 	if (form && feedback && input) {
 		form.addEventListener('submit', async (event) => {
@@ -47,19 +49,12 @@ import Layout from '../layouts/Layout.astro';
 				return;
 			}
 
+			console.log('[index] submitting text:', JSON.stringify(text));
 			feedback.textContent = 'Guardando...';
 			feedback.className = 'px-2 text-sm text-amber-200/90';
 
 			try {
-				const formData = new FormData();
-				formData.append('text', text);
-
-				const response = await fetch('/api/save', {
-					method: 'POST',
-					body: formData,
-				});
-
-				const result = await response.json();
+				const result = await saveWords(text);
 				if (result?.success) {
 					feedback.textContent = '¡Guardado correctamente!';
 					feedback.className = 'px-2 text-sm text-emerald-300';
@@ -70,7 +65,7 @@ import Layout from '../layouts/Layout.astro';
 				}
 			} catch (error) {
 				console.error(error);
-				feedback.textContent = 'No se pudo guardar.';
+				feedback.textContent = error instanceof Error ? error.message : 'No se pudo guardar.';
 				feedback.className = 'px-2 text-sm text-rose-300';
 			}
 		});

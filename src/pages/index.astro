@@ -1,5 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import InputChip from '../components/InputChip';
 ---
 
 <Layout>
@@ -9,65 +10,7 @@ import Layout from '../layouts/Layout.astro';
 				<h1 class="text-2xl font-black tracking-tight text-amber-400 sm:text-3xl">RTM 26 / TALLER 1</h1>
 				<p class="mt-2 text-sm text-amber-100/90 sm:text-base">Ese hombre eres tú: ¿recibir identidad o construirla?</p>
 			</div>
-
-			<form class="flex flex-col gap-2">
-				<div class="flex items-center gap-2 rounded-full border border-white/10 bg-slate-950/80 p-2 shadow-inner shadow-black/30">
-					<input
-						name="text"
-						type="text"
-						placeholder="¿Qué piensas?"
-						class="h-12 w-full rounded-full bg-transparent px-4 text-sm text-white outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-amber-400/50 sm:text-base"
-					/>
-					<button
-						type="submit"
-						class="h-11 shrink-0 rounded-full bg-amber-400 px-4 text-sm font-semibold text-slate-950 transition hover:bg-amber-300 sm:px-5"
-					>
-						Enviar
-					</button>
-				</div>
-				<p class="px-2 text-sm text-amber-200/90" data-feedback></p>
-			</form>
+			<InputChip client:load />
 		</div>
 	</section>
 </Layout>
-
-<script type="module">
-	import { saveWords } from '../lib/apiClient.ts';
-
-	const form = document.querySelector('form');
-	const feedback = document.querySelector('[data-feedback]');
-	const input = form?.querySelector('input[name="text"]');
-
-	if (form && feedback && input) {
-		form.addEventListener('submit', async (event) => {
-			event.preventDefault();
-			const text = input.value.trim();
-
-			if (!text) {
-				feedback.textContent = 'Escribe algo antes de enviar.';
-				feedback.className = 'px-2 text-sm text-rose-300';
-				return;
-			}
-
-			console.log('[index] submitting text:', JSON.stringify(text));
-			feedback.textContent = 'Guardando...';
-			feedback.className = 'px-2 text-sm text-amber-200/90';
-
-			try {
-				const result = await saveWords(text);
-				if (result?.success) {
-					feedback.textContent = '¡Guardado correctamente!';
-					feedback.className = 'px-2 text-sm text-emerald-300';
-					input.value = '';
-				} else {
-					feedback.textContent = result?.message || 'No se pudo guardar.';
-					feedback.className = 'px-2 text-sm text-rose-300';
-				}
-			} catch (error) {
-				console.error(error);
-				feedback.textContent = error instanceof Error ? error.message : 'No se pudo guardar.';
-				feedback.className = 'px-2 text-sm text-rose-300';
-			}
-		});
-	}
-</script>

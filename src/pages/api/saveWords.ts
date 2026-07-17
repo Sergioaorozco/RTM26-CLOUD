@@ -2,49 +2,50 @@ import type { APIRoute } from 'astro';
 import type { SaveWordRequestBody, SaveWordResponse } from '../../lib/types';
 import { saveWord } from '../../lib/firebase';
 
-async function parseRequestBody(request: Request): Promise<SaveWordRequestBody | null> {
-  const contentType = request.headers.get('content-type')?.split(';')[0] ?? '';
+export const prerender = false; // Ensure server-side rendering for request access
 
-  console.log('[saveWords] content-type:', request.headers.get('content-type'));
-
-  if (contentType === 'application/json') {
-    const json = await request.json().catch((error) => {
-      console.error('[saveWords] JSON parse failed:', error);
-      return null;
-    });
-    console.log('[saveWords] parsed JSON body:', json);
-    return json;
-  }
-
-  if (contentType === 'application/x-www-form-urlencoded') {
-    const formData = await request.formData();
-    return { text: String(formData.get('text') || '') };
-  }
-
-  const raw = await request.text();
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return { text: raw };
-  }
-}
+// Helper to send JSON responses
+const jsonResponse = (body: SaveWordResponse, status: number) => {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { 'Content-Type': 'application/json' },
+  });
+};
 
 export const POST: APIRoute = async ({ request }): Promise<Response> => {
-  const body = await parseRequestBody(request);
-  console.log('Parsed body:', body);
-  const text = typeof body?.text === 'string' ? body.text.trim() : '';
-  console.log('Extracted text:', text);
+  let requestBody: SaveWordRequestBody | null = null;
+
+  try {
+    const contentType = request.headers.get('content-type')?.split(';')[0];
+    if (contentType === 'application/json') {
+      requestBody = await request.json();
+    } else if (contentType === 'application/x-www-form-urlencoded') {
+      const formData = await request.formData();
+      requestBody = { text: String(formData.get('text') || '') };
+    } else {
+      // Fallback for other content types, attempt JSON parse or treat as raw text
+      const rawText = await request.text();
+      try {
+        requestBody = JSON.parse(rawText);
+      } catch {
+        requestBody = { text: rawText };
+      }
+    }
+  } catch (error) {
+    console.error('[saveWords] Request body parsing failed:', error);
+    return jsonResponse({
+      success: false,
+      message: 'Invalid request body format.',
+    }, 400);
+  }
+
+  const text = typeof requestBody?.text === 'string' ? requestBody.text.trim() : '';
 
   if (!text) {
-    const responseBody: SaveWordResponse = {
+    return jsonResponse({
       success: false,
       message: 'Text is required',
-      body,
-    };
-    return new Response(JSON.stringify(responseBody), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    }, 400);
   }
 
   const words = text
@@ -53,35 +54,23 @@ export const POST: APIRoute = async ({ request }): Promise<Response> => {
     .filter(Boolean);
 
   if (words.length === 0) {
-    const responseBody: SaveWordResponse = {
+    return jsonResponse({
       success: false,
       message: 'No valid words found',
-      body,
-    };
-    return new Response(JSON.stringify(responseBody), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    }, 400);
   }
 
   try {
     const results = await Promise.all(words.map((word) => saveWord(word)));
-    const responseBody: SaveWordResponse = {
+    return jsonResponse({
       success: true,
       results,
-    };
-    return new Response(JSON.stringify(responseBody), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    }, 200);
   } catch (error) {
-    const responseBody: SaveWordResponse = {
+    console.error('[saveWords] Firebase save failed:', error);
+    return jsonResponse({
       success: false,
       message: error instanceof Error ? error.message : 'Route failed',
-    };
-    return new Response(JSON.stringify(responseBody), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    }, 500);
   }
 };

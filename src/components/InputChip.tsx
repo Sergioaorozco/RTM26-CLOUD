@@ -3,7 +3,7 @@ import { useState, type KeyboardEvent } from 'react';
 import { Input } from './ui/input';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
-import { saveText } from '../lib/api';
+import { saveWords } from '../lib/api';
 import { X, Sparkles, Send, CheckCircle2, AlertCircle } from 'lucide-react';
 
 export default function InputChip() {
@@ -44,7 +44,7 @@ export default function InputChip() {
 
     try {
       const textToSend = chips.join(' ');
-      const response = await saveText(textToSend);
+      const response = await saveWords(textToSend);
       if (response.success) {
         setStatus('success');
         setMessage(response.message || '¡Tus pensamientos han sido guardados con éxito!');

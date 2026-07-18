@@ -1,6 +1,6 @@
 import type { SaveWordResponse } from './types';
 
-export async function saveText(text: string): Promise<SaveWordResponse> {
+export async function saveWords(text: string): Promise<SaveWordResponse> {
   const response = await fetch('/api/saveWords', {
     method: 'POST',
     headers: {

@@ -36,23 +36,27 @@ async function createDoc(collection: string, docId: string, data: Record<string,
   return res.json();
 }
 
+const COMMIT_URL = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents:commit`;
+
 async function updateDoc(collection: string, docId: string, data: Record<string, unknown>, incrementField?: string) {
-  const url = `${BASE_URL}/${collection}/${encodeURIComponent(docId)}?key=${apiKey}&currentDocument.exists=true`;
-  const body: Record<string, unknown> = {
-    fields: toFields(data),
+  const docName = `projects/${projectId}/databases/(default)/documents/${collection}/${encodeURIComponent(docId)}`;
+  const write: Record<string, unknown> = {
+    update: {
+      name: docName,
+      fields: toFields(data),
+    },
+    currentDocument: { exists: true },
   };
   if (incrementField) {
-    body.transforms = [{
-      fieldTransforms: [{
-        fieldPath: incrementField,
-        increment: { integerValue: '1' },
-      }],
+    write.updateTransforms = [{
+      fieldPath: incrementField,
+      increment: { integerValue: '1' },
     }];
   }
-  const res = await fetch(url, {
-    method: 'PATCH',
+  const res = await fetch(`${COMMIT_URL}?key=${apiKey}`, {
+    method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
+    body: JSON.stringify({ writes: [write] }),
   });
   if (!res.ok) throw new Error(`Firestore update failed: ${await res.text()}`);
   return res.json();

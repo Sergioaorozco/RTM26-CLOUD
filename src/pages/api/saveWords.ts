@@ -2,8 +2,6 @@ import type { APIRoute } from 'astro';
 import type { SaveWordRequestBody, SaveWordResponse } from '../../lib/types';
 import { saveWord } from '../../lib/firebase';
 
-export const prerender = false; // Ensure server-side rendering for request access
-
 // Helper to send JSON responses
 const jsonResponse = (body: SaveWordResponse, status: number) => {
   return new Response(JSON.stringify(body), {

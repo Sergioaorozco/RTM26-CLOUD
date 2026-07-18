@@ -86,32 +86,31 @@ export default function InputChip() {
             </div>
           )}
 
-          {/* Input & Button inline container */}
-          <div className="flex items-center gap-2">
-            <Input
-              type="text"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder={chips.length === 0 ? "¿Qué piensas? (Escribe y presiona Enter o coma)" : "Añade otro pensamiento..."}
-              className="h-10 border-0 bg-transparent px-2 text-white placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-0 md:text-base"
-            />
-            <Button
-              type="submit"
-              disabled={chips.length === 0 || status === 'loading'}
-              className="h-10 shrink-0 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-semibold px-4 transition-all duration-200 disabled:opacity-50 disabled:hover:bg-amber-400 flex items-center gap-1.5 shadow-md shadow-amber-950/20"
-            >
-              {status === 'loading' ? (
-                <div className="size-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <>
-                  <Send className="size-4" />
-                  <span>Enviar</span>
-                </>
-              )}
-            </Button>
-          </div>
+          {/* Input */}
+          <Input
+            type="text"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder={chips.length === 0 ? "¿Qué piensas? (Escribe y presiona Enter o coma)" : "Añade otro pensamiento..."}
+            className="h-10 border-0 bg-transparent px-2 text-white placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-0 md:text-base"
+          />
         </div>
+
+        <Button
+          type="submit"
+          disabled={chips.length === 0 || status === 'loading'}
+          className="h-10 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-semibold px-4 transition-all duration-200 disabled:opacity-50 disabled:hover:bg-amber-400 flex items-center gap-1.5 shadow-md shadow-amber-950/20"
+        >
+          {status === 'loading' ? (
+            <div className="size-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
+          ) : (
+            <>
+              <Send className="size-4" />
+              <span>Enviar</span>
+            </>
+          )}
+        </Button>
       </form>
 
       {/* Feedback messages */}

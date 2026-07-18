@@ -1,87 +1,111 @@
-import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
-import {
-  addDoc,
-  collection,
-  doc,
-  getDoc,
-  getFirestore,
-  increment,
-  serverTimestamp,
-  setDoc,
-  updateDoc,
-} from 'firebase/firestore';
+const projectId = import.meta.env.PUBLIC_FIREBASE_PROJECT_ID ?? '';
+const apiKey = import.meta.env.PUBLIC_FIREBASE_API_KEY ?? '';
 
-const firebaseConfig = {
-  apiKey: import.meta.env.PUBLIC_FIREBASE_API_KEY ?? '',
-  authDomain: import.meta.env.PUBLIC_FIREBASE_AUTH_DOMAIN ?? '',
-  projectId: import.meta.env.PUBLIC_FIREBASE_PROJECT_ID ?? '',
-  storageBucket: import.meta.env.PUBLIC_FIREBASE_STORAGE_BUCKET ?? '',
-  messagingSenderId: import.meta.env.PUBLIC_FIREBASE_MESSAGING_SENDER_ID ?? '',
-  appId: import.meta.env.PUBLIC_FIREBASE_APP_ID ?? '',
-};
+const BASE_URL = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents`;
 
-let app: FirebaseApp | undefined;
-
-export function getFirebaseApp() {
-  if (!firebaseConfig.projectId) {
-    return undefined;
+function toFields(obj: Record<string, unknown>) {
+  const fields: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (typeof value === 'string') {
+      fields[key] = { stringValue: value };
+    } else if (typeof value === 'number') {
+      fields[key] = Number.isInteger(value) ? { integerValue: String(value) } : { doubleValue: value };
+    } else if (value instanceof Date) {
+      fields[key] = { timestampValue: value.toISOString() };
+    }
   }
-
-  if (!app) {
-    app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
-  }
-
-  return app;
+  return fields;
 }
 
-export function getFirebaseDb() {
-  const firebaseApp = getFirebaseApp();
-
-  if (!firebaseApp) {
-    throw new Error('Firebase is not configured yet.');
-  }
-
-  return getFirestore(firebaseApp);
+async function getDoc(collection: string, docId: string) {
+  const url = `${BASE_URL}/${collection}/${encodeURIComponent(docId)}?key=${apiKey}`;
+  const res = await fetch(url);
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`Firestore GET failed: ${await res.text()}`);
+  return res.json();
 }
 
-function normalizeWord(text: string) {
-  return text.trim().toLowerCase();
+async function createDoc(collection: string, docId: string, data: Record<string, unknown>) {
+  const url = `${BASE_URL}/${collection}?documentId=${encodeURIComponent(docId)}&key=${apiKey}`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ fields: toFields(data) }),
+  });
+  if (!res.ok) throw new Error(`Firestore create failed: ${await res.text()}`);
+  return res.json();
+}
+
+async function updateDoc(collection: string, docId: string, data: Record<string, unknown>, incrementField?: string) {
+  const url = `${BASE_URL}/${collection}/${encodeURIComponent(docId)}?key=${apiKey}&currentDocument.exists=true`;
+  const body: Record<string, unknown> = {
+    fields: toFields(data),
+  };
+  if (incrementField) {
+    body.transforms = [{
+      fieldTransforms: [{
+        fieldPath: incrementField,
+        increment: { integerValue: '1' },
+      }],
+    }];
+  }
+  const res = await fetch(url, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`Firestore update failed: ${await res.text()}`);
+  return res.json();
+}
+
+async function addDoc(collection: string, data: Record<string, unknown>) {
+  const url = `${BASE_URL}/${collection}?key=${apiKey}`;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ fields: toFields(data) }),
+  });
+  if (!res.ok) throw new Error(`Firestore add failed: ${await res.text()}`);
+  return res.json();
 }
 
 export async function saveWord(text: string) {
   const trimmed = text.trim();
-
   if (!trimmed) {
     throw new Error('Please enter a word before sending.');
   }
 
-  const db = getFirebaseDb();
-  const normalized = normalizeWord(trimmed);
-  const wordRef = doc(db, 'words', normalized);
-  const wordSnapshot = await getDoc(wordRef);
+  if (!projectId) {
+    return { id: '', wordId: '' };
+  }
 
-  if (wordSnapshot.exists()) {
-    await updateDoc(wordRef, {
-      count: increment(1),
-      lastSubmittedAt: serverTimestamp(),
+  const normalized = trimmed.toLowerCase();
+  const now = new Date().toISOString();
+
+  const existing = await getDoc('words', normalized);
+
+  if (existing) {
+    await updateDoc('words', normalized, {
+      lastSubmittedAt: now,
       latestValue: trimmed,
-    });
+    }, 'count');
   } else {
-    await setDoc(wordRef, {
+    await createDoc('words', normalized, {
       text: trimmed,
       normalizedText: normalized,
       count: 1,
-      createdAt: serverTimestamp(),
-      lastSubmittedAt: serverTimestamp(),
+      createdAt: now,
+      lastSubmittedAt: now,
     });
   }
 
-  const submissionRef = await addDoc(collection(db, 'submissions'), {
+  const submission = await addDoc('submissions', {
     text: trimmed,
     normalizedText: normalized,
-    createdAt: serverTimestamp(),
+    createdAt: now,
     source: 'rtm-cloud',
   });
 
-  return { id: submissionRef.id, wordId: normalized };
+  const id = submission.name?.split('/').pop() ?? '';
+  return { id, wordId: normalized };
 }

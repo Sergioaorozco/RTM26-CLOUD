@@ -13,3 +13,8 @@ export interface SaveWordResponse {
   results?: SaveWordResult[];
   body?: SaveWordRequestBody;
 }
+
+export interface WordCloudItem {
+  text: string;
+  count: number;
+}

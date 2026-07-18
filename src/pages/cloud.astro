@@ -1,0 +1,14 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import WordCloud from "@/components/WordCloud";
+---
+
+<Layout>
+	<section class="flex min-h-screen flex-col items-center justify-center bg-[radial-gradient(circle_at_top,rgba(251,191,36,0.12),transparent_50%),linear-gradient(135deg,#020617,#0f172a,#020617)] px-4 py-12">
+		<div class="mb-10 text-center">
+			<h1 class="text-3xl font-black tracking-tight text-amber-400 sm:text-4xl">NUBE DE PALABRAS</h1>
+			<p class="mt-2 text-sm text-amber-100/60">Resultados en tiempo real</p>
+		</div>
+		<WordCloud client:load />
+	</section>
+</Layout>

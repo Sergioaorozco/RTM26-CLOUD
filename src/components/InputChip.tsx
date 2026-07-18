@@ -43,7 +43,7 @@ export default function InputChip() {
     setMessage('');
 
     try {
-      const textToSend = chips.join(' ');
+      const textToSend = chips.join(', ');
       const response = await saveWords(textToSend);
       if (response.success) {
         setStatus('success');

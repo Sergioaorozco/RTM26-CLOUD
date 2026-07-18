@@ -59,3 +59,21 @@ export async function saveWord(text: string) {
   const sub = await create('submissions', { text: trimmed, normalizedText: normalized, createdAt: now, source: 'rtm-cloud' });
   return { id: sub.name?.split('/').pop() ?? '', wordId: normalized };
 }
+
+export async function listWords(): Promise<{ text: string; count: number }[]> {
+  if (!projectId) return [];
+
+  const res = await fetch(`${db}/words?key=${apiKey}`);
+  if (!res.ok) throw new Error(await res.text());
+
+  const data = await res.json();
+  const docs = data.documents ?? [];
+
+  return docs.map((doc: Record<string, unknown>) => {
+    const fields = doc.fields as Record<string, { stringValue?: string; integerValue?: string }>;
+    return {
+      text: fields?.text?.stringValue ?? doc.name?.split('/').pop() ?? '',
+      count: Number(fields?.count?.integerValue ?? 0),
+    };
+  });
+}

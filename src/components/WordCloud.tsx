@@ -70,7 +70,7 @@ export default function WordCloud() {
       .spiral('rectangular')
       .on('end', (computed: LayoutWord[]) => {
         console.log(`[WordCloud] placed ${computed.length}/${entries.length} words`);
-        setLayout(computed.map(w => ({ ...w, x: w.x + pad, y: w.y + pad })));
+        setLayout(computed.map(word => ({ ...word, x: word.x + w / 2, y: word.y + h / 2 })));
       })
       .start();
   }, [words, dimensions]);

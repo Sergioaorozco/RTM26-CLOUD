@@ -7,8 +7,49 @@ import WordCloud from "@/components/WordCloud";
 	<section class="flex min-h-screen flex-col items-center justify-center bg-[radial-gradient(circle_at_top,rgba(251,191,36,0.12),transparent_50%),linear-gradient(135deg,#020617,#0f172a,#020617)] px-4 py-12">
 		<div class="mb-10 text-center">
 			<h1 class="text-3xl font-black tracking-tight text-amber-400 sm:text-4xl">NUBE DE PALABRAS</h1>
-			<p class="mt-2 text-sm text-amber-100/60">Resultados en tiempo real</p>
 		</div>
 		<WordCloud client:load />
 	</section>
+
+	<footer class="fixed bottom-6 right-6 z-50">
+		<button
+			id="resetBtn"
+			class="text-[10px] uppercase tracking-widest text-stone-700 transition-colors hover:text-red-400/60"
+			title="Resetear todos los datos"
+		>
+			reset
+		</button>
+	</footer>
+
+	<script>
+		const btn = document.getElementById('resetBtn');
+		let armed = false;
+
+		btn?.addEventListener('click', async () => {
+			if (!armed) {
+				armed = true;
+				btn!.textContent = '¿seguro?';
+				setTimeout(() => { armed = false; btn!.textContent = 'reset'; }, 4000);
+				return;
+			}
+
+			btn!.textContent = 'eliminando…';
+			btn!.style.pointerEvents = 'none';
+
+			try {
+				const res = await fetch('/api/reset', { method: 'POST' });
+				const data = await res.json();
+				btn!.textContent = data.success ? '✓ listo' : '✗ error';
+				if (data.success) setTimeout(() => location.reload(), 1000);
+			} catch {
+				btn!.textContent = '✗ error';
+			}
+
+			setTimeout(() => {
+				armed = false;
+				btn!.textContent = 'reset';
+				btn!.style.pointerEvents = 'auto';
+			}, 3000);
+		});
+	</script>
 </Layout>

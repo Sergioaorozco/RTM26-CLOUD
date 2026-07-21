@@ -60,6 +60,28 @@ export async function saveWord(text: string) {
   return { id: sub.name?.split('/').pop() ?? '', wordId: normalized };
 }
 
+export async function resetFirestore(): Promise<{ success: boolean; message: string }> {
+  if (!projectId) return { success: false, message: 'No project ID' };
+
+  const headers = { 'Content-Type': 'application/json' };
+
+  async function deleteCollection(col: string) {
+    const res = await fetch(`${db}/${col}?key=${apiKey}&pageSize=300`, { headers });
+    if (!res.ok) return;
+    const data = await res.json();
+    const docs = data.documents ?? [];
+    await Promise.all(docs.map((doc: { name: string }) => {
+      return fetch(`${doc.name}?key=${apiKey}`, { method: 'DELETE', headers });
+    }));
+    return docs.length;
+  }
+
+  const wordsDeleted = await deleteCollection('words') ?? 0;
+  const subsDeleted = await deleteCollection('submissions') ?? 0;
+
+  return { success: true, message: `Deleted ${wordsDeleted} words and ${subsDeleted} submissions` };
+}
+
 export async function listWords(): Promise<{ text: string; count: number }[]> {
   if (!projectId) return [];
 

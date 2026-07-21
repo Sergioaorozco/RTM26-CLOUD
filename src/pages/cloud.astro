@@ -4,11 +4,15 @@ import WordCloud from "@/components/WordCloud";
 ---
 
 <Layout>
-	<section class="flex min-h-screen flex-col items-center justify-center bg-[radial-gradient(circle_at_top,rgba(251,191,36,0.12),transparent_50%),linear-gradient(135deg,#020617,#0f172a,#020617)] px-4 py-12">
-		<div class="mb-10 text-center">
+	<section class="relative flex min-h-screen flex-col items-center justify-center px-4 py-12">
+		<div class="pointer-events-none absolute inset-0 z-0 bg-[url(/BG_WordCloud.webp)] bg-cover bg-center" />
+		<div class="pointer-events-none absolute inset-0 z-0 bg-gradient-to-b from-[#020617]/70 via-[#0f172a]/60 to-[#020617]/80" />
+		<div class="relative z-10 mb-10 text-center">
 			<h1 class="text-3xl font-black tracking-tight text-amber-400 sm:text-4xl">NUBE DE PALABRAS</h1>
 		</div>
-		<WordCloud client:load />
+		<div class="relative z-10 w-full">
+			<WordCloud client:load />
+		</div>
 	</section>
 
 	<footer class="fixed bottom-6 right-6 z-50">

@@ -98,7 +98,7 @@ export default function WordCloud() {
       <svg
         viewBox={`0 0 ${dimensions.w} ${dimensions.h}`}
         className="h-auto w-full"
-        style={{ minHeight: `${dimensions.h}px`, overflow: 'visible' }}
+        style={{ minHeight: `${dimensions.h}px` }}
       >
         {layout.map(word => {
           const isSelected = selected === word.text;
@@ -108,8 +108,6 @@ export default function WordCloud() {
           return (
             <text
               key={word.text}
-              x={word.x}
-              y={word.y}
               transform={`translate(${word.x}, ${word.y}) rotate(${word.rotate})`}
               textAnchor="middle"
               dominantBaseline="central"

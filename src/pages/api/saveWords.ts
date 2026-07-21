@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import type { SaveWordRequestBody, SaveWordResponse } from '../../lib/types';
 import { saveWord } from '../../lib/firebase';
+import { filterBadWords } from '../../lib/badWords';
 
 // Helper to send JSON responses
 const jsonResponse = (body: SaveWordResponse, status: number) => {
@@ -58,8 +59,26 @@ export const POST: APIRoute = async ({ request }): Promise<Response> => {
     }, 400);
   }
 
+  const { clean, rejected } = filterBadWords(words);
+
+  if (clean.length === 0) {
+    return jsonResponse({
+      success: false,
+      message: 'Contains inappropriate language',
+      rejected,
+    }, 400);
+  }
+
+  if (rejected.length > 0) {
+    return jsonResponse({
+      success: false,
+      message: `Some words contain inappropriate language: ${rejected.join(', ')}`,
+      rejected,
+    }, 400);
+  }
+
   try {
-    const results = await Promise.all(words.map((word) => saveWord(word)));
+    const results = await Promise.all(clean.map((word) => saveWord(word)));
     return jsonResponse({
       success: true,
       results,

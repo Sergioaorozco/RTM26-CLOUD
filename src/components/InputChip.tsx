@@ -4,7 +4,8 @@ import { Input } from './ui/input';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { saveWords } from '../lib/api';
-import { X, Sparkles, Send, CheckCircle2, AlertCircle } from 'lucide-react';
+import { containsBadWords } from '../lib/badWords';
+import { X, Sparkles, Send, CheckCircle2, AlertCircle, Ban } from 'lucide-react';
 
 export default function InputChip() {
   const [chips, setChips] = useState<string[]>([]);
@@ -39,6 +40,13 @@ export default function InputChip() {
     e.preventDefault();
     if (chips.length === 0) return;
 
+    const badChips = chips.filter((chip) => containsBadWords(chip).hasBadWords);
+    if (badChips.length > 0) {
+      setStatus('error');
+      setMessage(`Elimina el lenguaje inapropiado antes de enviar: ${badChips.join(', ')}`);
+      return;
+    }
+
     setStatus('loading');
     setMessage('');
 
@@ -48,7 +56,7 @@ export default function InputChip() {
       if (response.success) {
         setStatus('success');
         setMessage(response.message || '¡Tus pensamientos han sido guardados con éxito!');
-        setChips([]); // Clear chips on success
+        setChips([]);
       } else {
         setStatus('error');
         setMessage(response.message || 'Hubo un problema al guardar.');
@@ -67,12 +75,15 @@ export default function InputChip() {
           {/* Chips container */}
           {chips.length > 0 && (
             <div className="flex flex-wrap gap-1.5 pb-2 border-b border-white/5 max-h-28 overflow-y-auto">
-              {chips.map((chip, index) => (
+              {chips.map((chip, index) => {
+                const isBad = containsBadWords(chip).hasBadWords;
+                return (
                 <Badge
                   key={index}
                   variant="secondary"
-                  className="bg-amber-400/10 text-amber-200 border border-amber-400/20 px-2 py-0.5 rounded-md flex items-center gap-1 text-sm transition-all hover:bg-amber-400/20 animate-in fade-in zoom-in-95 duration-150"
+                  className={`px-2 py-0.5 rounded-md flex items-center gap-1 text-sm transition-all animate-in fade-in zoom-in-95 duration-150 ${isBad ? 'bg-rose-500/15 text-rose-300 border border-rose-500/30' : 'bg-amber-400/10 text-amber-200 border border-amber-400/20 hover:bg-amber-400/20'}`}
                 >
+                  {isBad && <Ban className="size-3 text-rose-400" />}
                   <span>{chip}</span>
                   <button
                     type="button"
@@ -82,7 +93,8 @@ export default function InputChip() {
                     <X className="size-3" />
                   </button>
                 </Badge>
-              ))}
+                );
+              })}
             </div>
           )}
 

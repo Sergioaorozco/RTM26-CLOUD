@@ -11,6 +11,7 @@ export interface SaveWordResponse {
   success: boolean;
   message?: string;
   results?: SaveWordResult[];
+  rejected?: string[];
   body?: SaveWordRequestBody;
 }
 

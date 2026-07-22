@@ -1,6 +1,6 @@
 const projectId = import.meta.env.PUBLIC_FIREBASE_PROJECT_ID ?? '';
 const apiKey = import.meta.env.PUBLIC_FIREBASE_API_KEY ?? '';
-const db = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents`;
+const db = `https://firestore.googleapis.com/v1/projects/${projectId}/databases/%28default%29/documents`;
 
 function fields(obj: Record<string, string | number>) {
   const out: Record<string, unknown> = {};
@@ -71,7 +71,9 @@ export async function resetFirestore(): Promise<{ success: boolean; message: str
     const data = await res.json();
     const docs = data.documents ?? [];
     await Promise.all(docs.map((doc: { name: string }) => {
-      return fetch(`${doc.name}?key=${apiKey}`, { method: 'DELETE', headers });
+      const deleteUrl = new URL(`https://firestore.googleapis.com/v1/${doc.name}`);
+      deleteUrl.searchParams.set('key', apiKey);
+      return fetch(deleteUrl.toString(), { method: 'DELETE', headers });
     }));
     return docs.length;
   }

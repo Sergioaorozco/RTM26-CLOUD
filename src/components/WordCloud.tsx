@@ -87,7 +87,7 @@ export default function WordCloud() {
     cloud<WordDatum>()
       .size([innerW, innerH])
       .words(entries)
-      .padding(10)
+      .padding((d: WordDatum) => Math.max(4, d.size * 0.45))
       .rotate(0)
       .fontSize(d => d.size)
       .spiral('rectangular')
@@ -153,8 +153,8 @@ export default function WordCloud() {
               fill={isSelected ? '#fbbf24' : word.color}
               className="cursor-pointer select-none transition-all duration-500"
               style={{
-                opacity: selected && !isSelected ? 0.1 : 1,
-                transition: 'fill 0.3s, opacity 0.4s',
+                opacity: selected && !isSelected ? 0.3 : 0.9,
+                transition: 'fill 0.3s, opacity 0.5s',
               }}
               onMouseEnter={() => setSelected(word.text)}
               onMouseLeave={() => setSelected(null)}

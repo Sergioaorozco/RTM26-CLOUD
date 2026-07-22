@@ -113,6 +113,7 @@ const SPANISH_BAD_WORDS = [
   'mensada',
   'pendejada',
   'pendejadas',
+  'idiota',
 ]
 
 export function containsBadWords(text: string): { hasBadWords: boolean; found: string[] } {

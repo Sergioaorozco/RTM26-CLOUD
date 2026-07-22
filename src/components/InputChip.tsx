@@ -38,12 +38,15 @@ export default function InputChip() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (chips.length === 0) return;
 
-    const badChips = chips.filter((chip) => containsBadWords(chip).hasBadWords);
-    if (badChips.length > 0) {
+    const currentInput = inputValue.trim();
+    const wordsToSubmit = chips.length > 0 ? chips : (currentInput ? [currentInput] : []);
+    if (wordsToSubmit.length === 0) return;
+
+    const badWords = wordsToSubmit.filter((w) => containsBadWords(w).hasBadWords);
+    if (badWords.length > 0) {
       setStatus('error');
-      setMessage(`Elimina el lenguaje inapropiado antes de enviar: ${badChips.join(', ')}`);
+      setMessage(`Elimina el lenguaje inapropiado antes de enviar: ${badWords.join(', ')}`);
       return;
     }
 
@@ -51,12 +54,13 @@ export default function InputChip() {
     setMessage('');
 
     try {
-      const textToSend = chips.join(', ');
+      const textToSend = wordsToSubmit.join(', ');
       const response = await saveWords(textToSend);
       if (response.success) {
         setStatus('success');
         setMessage(response.message || '¡Tus pensamientos han sido guardados con éxito!');
         setChips([]);
+        setInputValue('');
       } else {
         setStatus('error');
         setMessage(response.message || 'Hubo un problema al guardar.');
@@ -104,14 +108,14 @@ export default function InputChip() {
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={chips.length === 0 ? "¿Qué piensas? (Escribe y presiona Enter o coma)" : "Añade otro pensamiento..."}
+            placeholder={chips.length === 0 ? "¿Qué piensas?" : "Añade otro pensamiento..."}
             className="h-10 border-0 bg-transparent px-2 text-white placeholder:text-slate-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-0 md:text-base"
           />
         </div>
 
         <Button
           type="submit"
-          disabled={chips.length === 0 || status === 'loading'}
+          disabled={(chips.length === 0 && !inputValue.trim()) || status === 'loading'}
           className="h-10 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-semibold px-4 transition-all duration-200 disabled:opacity-50 disabled:hover:bg-amber-400 flex items-center gap-1.5 shadow-md shadow-amber-950/20"
         >
           {status === 'loading' ? (
@@ -143,7 +147,7 @@ export default function InputChip() {
       {chips.length > 0 && status === 'idle' && (
         <p className="px-2 text-xs text-amber-200/50 flex items-center gap-1">
           <Sparkles className="size-3 text-amber-400/70" />
-          <span>Presiona Enter para agregar el texto actual como una palabra clave.</span>
+          <span>Presiona Enter para agregar una palabra clave.</span>
         </p>
       )}
     </div>

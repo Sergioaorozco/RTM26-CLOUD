@@ -85,17 +85,14 @@ export default function InputChip() {
                 <Badge
                   key={index}
                   variant="secondary"
-                  className={`px-2 py-0.5 rounded-md flex items-center gap-1 text-sm transition-all animate-in fade-in zoom-in-95 duration-150 ${isBad ? 'bg-rose-500/15 text-rose-300 border border-rose-500/30' : 'bg-amber-400/10 text-amber-200 border border-amber-400/20 hover:bg-amber-400/20'}`}
+                  className={`px-3 py-1.5 rounded-md inline-flex items-center gap-1.5 text-sm h-auto transition-all animate-in fade-in zoom-in-95 duration-150 ${isBad ? 'bg-rose-500/15 text-rose-300 border border-rose-500/30' : 'bg-amber-400/10 text-amber-200 border border-amber-400/20 hover:bg-amber-400/20'}`}
                 >
-                  {isBad && <Ban className="size-3 text-rose-400" />}
-                  <span>{chip}</span>
+                  {isBad && <Ban className="size-3.5 text-rose-400 shrink-0" />}<span className="flex-1 text-center">{chip}</span>
                   <button
                     type="button"
                     onClick={() => removeChip(index)}
                     className="hover:bg-amber-400/20 rounded-full p-0.5 transition-colors text-amber-300 hover:text-white outline-none"
-                  >
-                    <X className="size-3" />
-                  </button>
+                  ><X className="size-3.5" /></button>
                 </Badge>
                 );
               })}
